@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}riffdb{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/player.js" defer></script>
+  <script src="/static/tags.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">riffdb</a>
+    <nav>
+      <a href="/">Browse</a>
+      <a href="/queue">Tag queue{% if untagged_count %} <span class="badge">{{ untagged_count }}</span>{% endif %}</a>
+      <a href="/import">Import</a>
+    </nav>
+  </header>
+
+  <main>{% block content %}{% endblock %}</main>
+
+  <datalist id="key-options">{% for k in key_options %}<option value="{{ k }}">{% endfor %}</datalist>
+  <datalist id="tuning-options">{% for t in tuning_options %}<option value="{{ t }}">{% endfor %}</datalist>
+  <datalist id="tag-options">{% for t in all_tags %}<option value="{{ t.name }}">{% endfor %}</datalist>
+
+  <div id="dock" class="dock" hidden>
+    <div class="dock-info">
+      <span id="dock-title" class="dock-title"></span>
+      <label class="dock-auto"><input type="checkbox" id="dock-autonext"> auto-next</label>
+    </div>
+    <div class="dock-controls">
+      <button type="button" id="dock-prev" class="icon-btn" title="Previous result">&#9198;</button>
+      <audio id="player" controls preload="none"></audio>
+      <button type="button" id="dock-next" class="icon-btn" title="Next result">&#9197;</button>
+    </div>
+  </div>
+</body>
+</html>

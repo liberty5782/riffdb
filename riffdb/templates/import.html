@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="edit">
+  <h1>Import</h1>
+
+  <section class="card">
+    <h2>Upload</h2>
+    <p class="sub">Pick audio files (or a whole folder) from this device. Files already in the library are skipped.</p>
+    <form id="upload-form" hx-post="/import/upload" hx-encoding="multipart/form-data"
+          hx-target="#import-results" hx-disabled-elt="find button">
+      <div class="upload-pickers">
+        <label class="btn">Choose files<input type="file" name="files" multiple accept="audio/*,.m4a,.opus,.3gp" hidden></label>
+        <label class="btn">Choose folder<input type="file" name="files" multiple webkitdirectory hidden></label>
+        <span id="picked" class="sub">nothing selected</span>
+      </div>
+      <progress id="upload-progress" value="0" max="100" hidden></progress>
+      <button type="submit" class="primary">Upload</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Inbox folder</h2>
+    <p class="sub">Anything copied into <code>{{ inbox_dir }}</code> (on the server; <code>./data/inbox</code> next to docker-compose.yml)
+      is imported automatically{% if poll_s > 0 %} every {{ poll_s|int }}s{% endif %}. Subfolders are fine.</p>
+    <button hx-post="/import/scan" hx-target="#import-results">Scan now</button>
+  </section>
+
+  <section id="import-results"></section>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("upload-form");
+    const picked = document.getElementById("picked");
+    const bar = document.getElementById("upload-progress");
+    form.addEventListener("change", () => {
+      const n = [...form.querySelectorAll("input[type=file]")].reduce((a, i) => a + i.files.length, 0);
+      picked.textContent = n ? `${n} file${n === 1 ? "" : "s"} selected` : "nothing selected";
+    });
+    form.addEventListener("htmx:xhr:progress", (e) => {
+      bar.hidden = false;
+      if (e.detail.lengthComputable) bar.value = (e.detail.loaded / e.detail.total) * 100;
+    });
+    form.addEventListener("htmx:afterRequest", () => { bar.hidden = true; bar.value = 0; form.reset(); picked.textContent = "nothing selected"; });
+  });
+</script>
+{% endblock %}

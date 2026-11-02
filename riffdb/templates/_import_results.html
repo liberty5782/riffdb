@@ -1,0 +1,15 @@
+{% set imported = results|selectattr("status", "equalto", "imported")|list %}
+<div class="card">
+  <h2>{% if scanned %}Inbox scan{% else %}Upload{% endif %}: {{ imported|length }} imported{% if results|length != imported|length %}, {{ results|length - imported|length }} skipped{% endif %}</h2>
+  {% if not results %}<p class="sub">No new files found.</p>{% endif %}
+  {% if imported %}<p><a class="btn primary" href="/queue">Start tagging →</a></p>{% endif %}
+  <ul class="import-list">
+    {% for r in results %}
+    <li class="st-{{ r.status }}">
+      <span class="st">{{ r.status }}</span>
+      {% if r.recording_id %}<a href="/r/{{ r.recording_id }}">{{ r.filename }}</a>{% else %}{{ r.filename }}{% endif %}
+      {% if r.message %}<small>— {{ r.message }}</small>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<form id="search" class="search" action="/" method="get"
+      hx-get="/results" hx-target="#results" hx-trigger="input delay:250ms, change, submit"
+      hx-sync="this:replace">
+  <input class="search-box" type="search" name="q" value="{{ query.q }}"
+         placeholder="Search titles, notes, tags…" autocomplete="off" autofocus>
+
+  <details class="filters" {% if query.key or query.tuning or query.tags or query.bpm_min or query.bpm_max or query.untagged or query.date_from or query.date_to %}open{% endif %}>
+    <summary>Filters</summary>
+    <div class="filter-grid">
+      <label>Key
+        <select name="key">
+          <option value="">any</option>
+          {% for k in used_keys %}<option {% if k|lower == query.key|lower %}selected{% endif %}>{{ k }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Tuning
+        <select name="tuning">
+          <option value="">any</option>
+          {% for t in used_tunings %}<option {% if t|lower == query.tuning|lower %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>BPM
+        <span class="range">
+          <input type="number" name="bpm_min" min="1" max="400" placeholder="min" value="{{ query.bpm_min or '' }}">
+          <input type="number" name="bpm_max" min="1" max="400" placeholder="max" value="{{ query.bpm_max or '' }}">
+        </span>
+      </label>
+      <label>Recorded
+        <span class="range">
+          <input type="date" name="date_from" value="{{ query.date_from }}">
+          <input type="date" name="date_to" value="{{ query.date_to }}">
+        </span>
+      </label>
+      <label class="wide">Has all tags
+        <div class="chip-input" data-chip-input data-name="tags" data-value="{{ query.tags|join(',') }}"></div>
+      </label>
+      <label>Sort
+        <select name="sort">
+          {% for value, label in [("newest","Newest"),("oldest","Oldest"),("title","Title"),("relevance","Best match")] %}
+          <option value="{{ value }}" {% if query.sort == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" name="untagged" value="1" {% if query.untagged %}checked{% endif %}> Untagged only</label>
+      <a class="clear" href="/">Clear all</a>
+    </div>
+  </details>
+
+  {% if all_tags %}
+  <div class="tag-cloud">
+    {% for t in all_tags[:30] %}<button type="button" class="chip" data-add-tag="{{ t.name }}">{{ t.name }} <small>{{ t.n }}</small></button>{% endfor %}
+  </div>
+  {% endif %}
+</form>
+
+<section id="results">{% include "_results.html" %}</section>
+{% endblock %}

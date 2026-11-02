@@ -1,0 +1,26 @@
+<p class="count">{{ results|length }}{% if results|length >= query.limit %}+{% endif %} riff{{ "" if results|length == 1 else "s" }}</p>
+{% if not results %}
+  <p class="empty">Nothing matches. {% if not query.q and not query.tags %}<a href="/import">Import some recordings</a>.{% endif %}</p>
+{% endif %}
+<ul class="results">
+  {% for r in results %}
+  <li class="row" data-id="{{ r.id }}">
+    <button type="button" class="play-btn" data-id="{{ r.id }}" data-src="/audio/{{ r.id }}"
+            data-title="{{ r.title or r.filename_orig }}" aria-label="Play">&#9654;</button>
+    <div class="row-main">
+      <a class="row-title {% if not r.title %}untitled{% endif %}" href="/r/{{ r.id }}">{{ r.title or r.filename_orig }}</a>
+      <div class="row-meta">
+        {% if r.key %}<span class="pill">{{ r.key }}</span>{% endif %}
+        {% if r.tuning %}<span class="pill">{{ r.tuning }}</span>{% endif %}
+        {% if r.bpm %}<span class="pill">{{ r.bpm }} bpm</span>{% endif %}
+        {% for t in r.tags %}<a class="chip" href="/?tags={{ t|urlencode }}">{{ t }}</a>{% endfor %}
+      </div>
+      {% if r.notes %}<div class="row-notes" data-clamp title="Click to expand">{{ r.notes }}</div>{% endif %}
+    </div>
+    <div class="row-side">
+      <span>{{ r.recorded_at|date }}</span>
+      <span>{{ r.duration_s|duration }}</span>
+    </div>
+  </li>
+  {% endfor %}
+</ul>

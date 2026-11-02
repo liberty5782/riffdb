@@ -1,0 +1,18 @@
+services:
+  riffdb:
+    build: .
+    container_name: riffdb
+    restart: unless-stopped
+    # Run as your host user so files in ./data (incl. the inbox) stay yours.
+    # Create ./data before the first `up`, otherwise Docker makes it root-owned.
+    user: "${RIFFDB_UID:-1000}:${RIFFDB_GID:-1000}"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+      # Server timezone, so embedded recording dates show in local time
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      RIFFDB_DATA_DIR: /data
+      # Seconds between inbox scans (0 disables the watcher)
+      RIFFDB_INBOX_POLL_S: "30"
