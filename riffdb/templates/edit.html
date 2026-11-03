@@ -1,39 +1,5 @@
 {% extends "base.html" %}
 {% block title %}{{ rec.title or rec.filename_orig }} · riffdb{% endblock %}
 {% block content %}
-<div class="edit">
-  {% if queue %}<p class="queue-note">Tag queue · {{ untagged_count }} left</p>{% endif %}
-  <h1 class="{% if not rec.title %}untitled{% endif %}">{{ rec.title or rec.filename_orig }}</h1>
-  <p class="sub">{{ rec.filename_orig }} · {{ rec.recorded_at|date }} · {{ rec.duration_s|duration }}</p>
-
-  <audio class="edit-player" controls preload="metadata" src="/audio/{{ rec.id }}" {% if queue %}autoplay{% endif %}></audio>
-
-  <form method="post" action="/r/{{ rec.id }}" class="edit-form">
-    <label class="wide">Title <input name="title" value="{{ rec.title or '' }}" placeholder="untitled"></label>
-    <label>Key <input name="key" list="key-options" value="{{ rec.key or '' }}" placeholder="e.g. Em" autocomplete="off"></label>
-    <label>Tuning <input name="tuning" list="tuning-options" value="{{ rec.tuning or '' }}" placeholder="e.g. Drop D" autocomplete="off"></label>
-    <label>BPM <input name="bpm" type="number" min="1" max="400" inputmode="numeric" value="{{ rec.bpm or '' }}"></label>
-    <label class="wide">Tags
-      <div class="chip-input" data-chip-input data-name="tags" data-value="{{ tags|join(',') }}"></div>
-    </label>
-    <label class="wide">Notes <textarea name="notes" rows="3">{{ rec.notes or '' }}</textarea></label>
-
-    <div class="actions">
-      {% if queue %}
-        <button type="submit" name="action" value="next" class="primary">Save &amp; next</button>
-        <a class="btn" href="/queue?after={{ rec.id }}">Skip</a>
-        <button type="submit" name="action" value="save">Save</button>
-      {% else %}
-        <button type="submit" name="action" value="save" class="primary">Save</button>
-        <a class="btn" href="/">Back</a>
-      {% endif %}
-      {% if request.query_params.get('saved') %}<span class="saved">Saved ✓</span>{% endif %}
-    </div>
-  </form>
-
-  <form method="post" action="/r/{{ rec.id }}/delete" class="delete-form"
-        onsubmit="return confirm('Delete this recording and its audio file? This cannot be undone.')">
-    <button type="submit" class="danger">Delete recording</button>
-  </form>
-</div>
+<div class="edit"><section id="panel">{% include "_editor.html" %}</section></div>
 {% endblock %}

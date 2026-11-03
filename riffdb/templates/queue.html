@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Tag queue · riffdb{% endblock %}
+{% block content %}
+{# Links and forms inside are boosted: only the editor panel, the list and the
+   nav badge are swapped, so the page doesn't flash or lose its scroll position. #}
+<div class="queue" hx-boost="true" hx-target="#panel" hx-select="#panel" hx-swap="outerHTML"
+     hx-select-oob="#queue-list,#nav-queue">
+  <aside id="queue-list" class="queue-list">
+    <h2>{{ pending|length }} untagged</h2>
+    {% if pending %}
+    <ul>
+      {% for r in pending %}
+      <li><a href="/queue?id={{ r.id }}" class="{% if rec and r.id == rec.id %}active{% endif %}">
+        <span class="ql-name">{{ r.filename_orig }}</span>
+        <span class="ql-meta">{{ r.recorded_at|date }} · {{ r.duration_s|duration }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="sub">Nothing left to tag.</p>
+    {% endif %}
+  </aside>
+
+  <section id="panel" class="queue-panel">
+    {% if rec %}
+      {% include "_editor.html" %}
+    {% else %}
+      <h1>All caught up</h1>
+      <p>Every recording has at least one descriptor. <a href="/" hx-boost="false">Browse</a> or <a href="/import" hx-boost="false">import more</a>.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

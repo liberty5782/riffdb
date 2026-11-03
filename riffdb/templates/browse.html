@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="browse">
+<div class="browse-main">
 <form id="search" class="search" action="/" method="get"
       hx-get="/results" hx-target="#results" hx-trigger="input delay:250ms, change, submit"
       hx-sync="this:replace">
@@ -56,4 +58,15 @@
 </form>
 
 <section id="results">{% include "_results.html" %}</section>
+</div>
+
+{# Wide screens only: clicking a riff opens it here (see browse.js); the editor's
+   forms/links are boosted so saving or closing swaps just this panel. #}
+<div class="browse-side" hx-boost="true" hx-target="#panel" hx-select="#panel" hx-swap="outerHTML" hx-push-url="false">
+  <section id="panel" class="panel-empty">
+    <p class="sub">Select a riff to see and edit its details here.</p>
+  </section>
+</div>
+</div>
+<script src="/static/browse.js" defer></script>
 {% endblock %}

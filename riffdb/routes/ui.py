@@ -144,11 +144,11 @@ def audio(rec_id: str, conn: Conn, settings: Cfg):
 
 
 @router.get("/r/{rec_id}", response_class=HTMLResponse)
-def edit_page(request: Request, rec_id: str, conn: Conn, queue: bool = False):
+def edit_page(request: Request, rec_id: str, conn: Conn, saved: bool = False):
     rec = db.get_recording(conn, rec_id)
     if rec is None:
         raise HTTPException(404)
-    ctx = _common(conn) | {"rec": rec, "tags": db.tags_for(conn, rec_id), "queue": queue}
+    ctx = _common(conn) | {"rec": rec, "tags": db.tags_for(conn, rec_id), "queue": False, "saved": saved}
     return templates.TemplateResponse(request, "edit.html", ctx)
 
 
@@ -169,6 +169,7 @@ def save(
     notes: Annotated[str, Form()] = "",
     tags: Annotated[str, Form()] = "",
     action: Annotated[str, Form()] = "save",
+    queue: Annotated[bool, Form()] = False,
 ):
     rec = db.get_recording(conn, rec_id)
     if rec is None:
@@ -188,33 +189,53 @@ def save(
     library.sync_name(conn, settings, rec_id)
     library.write_export(conn, settings)
     if action == "next":
-        return _redirect_next_untagged(conn, rec)
+        return RedirectResponse(f"/queue?after={rec_id}", status_code=303)
+    if queue:
+        return RedirectResponse(f"/queue?id={rec_id}&saved=1", status_code=303)
     return RedirectResponse(f"/r/{rec_id}?saved=1", status_code=303)
 
 
-def _redirect_next_untagged(conn: sqlite3.Connection, after: sqlite3.Row | None) -> RedirectResponse:
-    nxt = db.next_untagged(conn, after)
-    if nxt is None:
-        return RedirectResponse("/queue", status_code=303)
-    return RedirectResponse(f"/r/{nxt['id']}?queue=1", status_code=303)
-
-
 @router.get("/queue", response_class=HTMLResponse)
-def queue(request: Request, conn: Conn, after: str | None = None):
-    after_rec = db.get_recording(conn, after) if after else None
-    nxt = db.next_untagged(conn, after_rec)
-    if nxt is not None:
-        return RedirectResponse(f"/r/{nxt['id']}?queue=1", status_code=303)
-    return templates.TemplateResponse(request, "queue_done.html", _common(conn))
+def queue(
+    request: Request,
+    conn: Conn,
+    id: str | None = None,
+    after: str | None = None,
+    saved: bool = False,
+):
+    """Split view: untagged list on the side, editor for the selected riff.
+
+    `id` selects a riff (it stays open after saving even though it's no longer
+    untagged); `after` picks the next untagged one after the given riff.
+    """
+    rec = db.get_recording(conn, id) if id else None
+    if rec is None:
+        after_rec = db.get_recording(conn, after) if after else None
+        rec = db.next_untagged(conn, after_rec)
+    pending = search.search(conn, search.Query(untagged=True, sort="oldest", limit=2000))
+    ctx = _common(conn) | {
+        "rec": rec,
+        "tags": db.tags_for(conn, rec["id"]) if rec else [],
+        "pending": pending,
+        "queue": True,
+        "saved": saved,
+    }
+    response = templates.TemplateResponse(request, "queue.html", ctx)
+    # Canonical URL for the selected riff, so reload/back lands on the same one.
+    response.headers["HX-Push-Url"] = f"/queue?id={rec['id']}" if rec else "/queue"
+    return response
 
 
 @router.post("/r/{rec_id}/delete")
-def delete(rec_id: str, conn: Conn, settings: Cfg):
+def delete(rec_id: str, conn: Conn, settings: Cfg, queue: Annotated[bool, Form()] = False):
     rec = db.delete_recording(conn, rec_id)
     if rec is None:
         raise HTTPException(404)
     library.remove_file(settings, rec["path"])
     library.write_export(conn, settings)
+    if queue:
+        nxt = db.next_untagged(conn, rec)
+        return RedirectResponse(f"/queue?id={nxt['id']}" if nxt else "/queue", status_code=303)
     return RedirectResponse("/", status_code=303)
 
 

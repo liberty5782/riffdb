@@ -6,7 +6,7 @@
   {% for r in results %}
   <li class="row" data-id="{{ r.id }}">
     <button type="button" class="play-btn" data-id="{{ r.id }}" data-src="/audio/{{ r.id }}"
-            data-title="{{ r.title or r.filename_orig }}" aria-label="Play">&#9654;</button>
+            data-title="{{ r.title or r.filename_orig }}" aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
     <div class="row-main">
       <a class="row-title {% if not r.title %}untitled{% endif %}" href="/r/{{ r.id }}">{{ r.title or r.filename_orig }}</a>
       <div class="row-meta">

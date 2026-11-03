@@ -2,6 +2,8 @@
 // renders chips + a text box and keeps a hidden comma-separated input in sync.
 (() => {
   function init(root) {
+    if (root.dataset.chipReady) return;
+    root.dataset.chipReady = "1";
     const hidden = Object.assign(document.createElement("input"), { type: "hidden", name: root.dataset.name });
     const text = Object.assign(document.createElement("input"), {
       type: "text", placeholder: "add tag…", autocomplete: "off",
@@ -66,8 +68,11 @@
     render(false);
   }
 
+  const initAll = (el) => el.querySelectorAll("[data-chip-input]").forEach(init);
+  // htmx:load also fires for content swapped in later (e.g. the tag queue's editor).
+  document.addEventListener("htmx:load", (e) => initAll(e.target));
   document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll("[data-chip-input]").forEach(init);
+    initAll(document);
     // Tag cloud on the browse page adds to the filter chips.
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-add-tag]");

@@ -22,8 +22,10 @@ h2 { font-size: 1.05rem; margin: 0 0 6px; }
   background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
 .brand { font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
 .topbar nav { display: flex; gap: 14px; flex-wrap: wrap; }
-.topbar nav a { color: var(--muted); }
-.topbar nav a:hover { color: var(--text); text-decoration: none; }
+.topbar nav a { color: var(--muted); padding: 3px 10px; border-radius: 6px; }
+.topbar nav a:hover { color: var(--text); text-decoration: none; background: rgba(255, 255, 255, 0.05); }
+.topbar nav a[aria-current="page"] { color: var(--text); background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 -2px 0 var(--accent); }
 .badge { background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 0 7px; font-size: 0.8em; font-weight: 600; }
 
 /* inputs */
@@ -89,11 +91,11 @@ a.chip:hover { background: #52525b; text-decoration: none; }
 .dock-auto input { width: auto; }
 .dock-controls { display: flex; align-items: center; gap: 8px; max-width: 960px; margin: 0 auto; }
 .dock audio { flex: 1; min-width: 0; height: 40px; }
-.icon-btn { padding: 6px 10px; }
+.icon-btn { padding: 6px 10px; display: grid; place-items: center; }
+.play-btn svg, .icon-btn svg { display: block; width: 18px; height: 18px; fill: currentColor; }
 
 /* edit / import */
 .edit { max-width: 640px; margin: 0 auto; }
-.queue-note { color: var(--accent); margin: 0 0 6px; font-size: 0.85rem; }
 .edit-player { width: 100%; margin: 12px 0; }
 .edit-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .edit-form .wide { grid-column: 1 / -1; }
@@ -109,6 +111,40 @@ progress { width: 100%; margin-bottom: 10px; accent-color: var(--accent); }
 .st { display: inline-block; min-width: 82px; font-size: 0.75rem; text-transform: uppercase; color: var(--muted); }
 .st-imported .st { color: var(--ok); }
 .st-error .st, .st-unsupported .st { color: var(--danger); }
+
+/* browse: results + detail panel (wide screens) */
+.browse-side { display: none; }
+.row.selected { background: rgba(255, 255, 255, 0.04); box-shadow: inset 3px 0 0 var(--accent); }
+@media (min-width: 1000px) {
+  main:has(.browse) { max-width: 1400px; }
+  .browse { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 24px; align-items: start; }
+  .browse-side { display: block; position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow-y: auto;
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  body.has-dock .browse-side { max-height: calc(100vh - 190px); }
+  .panel-empty { display: grid; place-items: center; min-height: 200px; text-align: center; }
+  .browse-side .edit-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* tag queue: list + editor */
+.queue { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+main:has(.queue) { max-width: 1200px; }
+.queue-list { position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow-y: auto;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius); }
+.queue-list h2 { font-size: 0.85rem; color: var(--muted); margin: 0; padding: 10px 12px;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel-2); }
+.queue-list ul { list-style: none; margin: 0; padding: 4px; }
+.queue-list a { display: flex; flex-direction: column; padding: 7px 9px; border-radius: 6px; color: var(--text); }
+.queue-list a:hover { background: var(--panel); text-decoration: none; }
+.queue-list a.active { background: rgba(245, 158, 11, 0.14); box-shadow: inset 3px 0 0 var(--accent); }
+.queue-list .ql-name { font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.queue-list .ql-meta { font-size: 0.75rem; color: var(--muted); }
+.queue-list .sub { padding: 10px 12px; margin: 0; }
+.queue-panel { min-width: 0; }
+
+@media (max-width: 800px) {
+  .queue { grid-template-columns: 1fr; gap: 12px; }
+  .queue-list { position: static; max-height: 32vh; }
+}
 
 @media (max-width: 560px) {
   .edit-form { grid-template-columns: 1fr 1fr; }

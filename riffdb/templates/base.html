@@ -5,17 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}riffdb{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
+  <!-- No history snapshots: Back re-fetches, so it never shows a deleted/stale riff -->
+  <meta name="htmx-config" content='{"historyCacheSize": 0, "refreshOnHistoryMiss": true}'>
   <script src="/static/htmx.min.js" defer></script>
   <script src="/static/player.js" defer></script>
   <script src="/static/tags.js" defer></script>
+  <script>
+    // <form data-confirm="..."> asks before submitting. Capture phase, so it runs
+    // before HTMX's own submit handler on boosted forms.
+    document.addEventListener("submit", (e) => {
+      const msg = e.target.dataset?.confirm;
+      if (msg && !confirm(msg)) { e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+  </script>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="/">riffdb</a>
+    {% set path = request.url.path %}
     <nav>
-      <a href="/">Browse</a>
-      <a href="/queue">Tag queue{% if untagged_count %} <span class="badge">{{ untagged_count }}</span>{% endif %}</a>
-      <a href="/import">Import</a>
+      <a href="/" {% if path == "/" or path.startswith("/r/") %}aria-current="page"{% endif %}>Browse</a>
+      <a href="/queue" id="nav-queue" {% if path == "/queue" %}aria-current="page"{% endif %}>Tag queue{% if untagged_count %} <span class="badge">{{ untagged_count }}</span>{% endif %}</a>
+      <a href="/import" {% if path.startswith("/import") %}aria-current="page"{% endif %}>Import</a>
     </nav>
   </header>
 
@@ -31,9 +42,9 @@
       <label class="dock-auto"><input type="checkbox" id="dock-autonext"> auto-next</label>
     </div>
     <div class="dock-controls">
-      <button type="button" id="dock-prev" class="icon-btn" title="Previous result">&#9198;</button>
+      <button type="button" id="dock-prev" class="icon-btn" title="Previous result"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
       <audio id="player" controls preload="none"></audio>
-      <button type="button" id="dock-next" class="icon-btn" title="Next result">&#9197;</button>
+      <button type="button" id="dock-next" class="icon-btn" title="Next result"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
     </div>
   </div>
 </body>

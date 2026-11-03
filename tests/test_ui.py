@@ -16,13 +16,13 @@ def test_upload_tag_search_play_delete(client, settings, tmp_path):
 
     rec_id = re.search(r'href="/r/([0-9a-f-]{36})"', r.text).group(1)
 
-    # Queue points at it
-    q = client.get("/queue", follow_redirects=False)
-    assert q.status_code == 303 and q.headers["location"] == f"/r/{rec_id}?queue=1"
+    # Queue opens it in the editor panel
+    q = client.get("/queue")
+    assert q.status_code == 200 and f'action="/r/{rec_id}"' in q.text and "1 untagged" in q.text
 
-    # Save & next with no more untagged -> queue done page
-    r = client.post(f"/r/{rec_id}", data={"title": "Doom riff", "tuning": "Drop D", "bpm": "", "tags": "Dark, slow ,dark", "action": "next"})
-    assert r.status_code == 200 and "All caught up" in r.text
+    # Save & next with no more untagged -> queue done
+    r = client.post(f"/r/{rec_id}", data={"title": "Doom riff", "tuning": "Drop D", "bpm": "", "tags": "Dark, slow ,dark", "action": "next", "queue": "1"})
+    assert r.status_code == 200 and "All caught up" in r.text and "0 untagged" in r.text
 
     res = client.get("/results", params={"q": "doom", "tags": "dark"})
     assert "Doom riff" in res.text and res.headers["HX-Replace-Url"] == "/?q=doom&tags=dark"
@@ -70,3 +70,30 @@ def test_readable_names_and_export(client, settings, tmp_path):
     client.post(f"/r/{rec_id}/delete")
     assert not (settings.audio_dir / "2025").exists()  # empty year folder pruned
     assert json.loads((settings.data_dir / "riffdb-export.json").read_text())["count"] == 0
+
+
+def test_queue_split_view(client, tmp_path):
+    ids = []
+    for i, name in enumerate(["20250101_100000.wav", "20250102_100000.wav", "20250103_100000.wav"]):
+        r = upload(client, tmp_path, name, seed=i)
+        ids.append(re.search(r'href="/r/([0-9a-f-]{36})"', r.text).group(1))
+    a, b, c = ids
+
+    page = client.get("/queue")
+    assert "3 untagged" in page.text and f'action="/r/{a}"' in page.text  # oldest first
+    assert page.headers["HX-Push-Url"] == f"/queue?id={a}"
+
+    # Picking one from the list opens it
+    assert f'action="/r/{c}"' in client.get(f"/queue?id={c}").text
+
+    # Plain save keeps the same riff open, now gone from the untagged list
+    r = client.post(f"/r/{c}", data={"tags": "x", "queue": "1"})
+    assert f'action="/r/{c}"' in r.text and "Saved" in r.text and "2 untagged" in r.text
+    assert f'href="/queue?id={c}"' not in r.text
+
+    # Skip moves to the next untagged after a
+    assert f'action="/r/{b}"' in client.get(f"/queue?after={a}").text
+
+    # Deleting from the queue lands on the next untagged
+    r = client.post(f"/r/{b}/delete", data={"queue": "1"})
+    assert f'action="/r/{a}"' in r.text and "1 untagged" in r.text
