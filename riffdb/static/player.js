@@ -83,6 +83,21 @@
     for (const ev of ["play", "pause"]) player.addEventListener(ev, markPlaying);
     player.addEventListener("ended", () => { markPlaying(); if (auto.checked) step(1); });
     document.body.addEventListener("htmx:afterSwap", () => { markPlaying(); markClamped(); });
+
+    // Autoplay is started from JS rather than the `autoplay` attribute: htmx clones
+    // the page before swapping (history snapshot), and a cloned <audio autoplay>
+    // starts playing off-page where nothing can pause it.
+    const autoplay = () => document.querySelectorAll("audio[data-autoplay]:not([data-started])").forEach((a) => {
+      a.dataset.started = "1";
+      a.play().catch(() => {}); // blocked without a prior user gesture on first load; fine
+    });
+    document.body.addEventListener("htmx:afterSettle", autoplay);
+    autoplay();
+
+    // Belt and braces: stop any player that's about to be swapped out.
+    document.body.addEventListener("htmx:beforeSwap", (e) => {
+      e.detail.target.querySelectorAll?.("audio").forEach((a) => a.pause());
+    });
     markClamped();
   });
 })();

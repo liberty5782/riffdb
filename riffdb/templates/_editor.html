@@ -2,9 +2,9 @@
 <h1 class="{% if not rec.title %}untitled{% endif %}">{{ rec.title or rec.filename_orig }}</h1>
 <p class="sub">{{ rec.filename_orig }} · {{ rec.recorded_at|date }} · {{ rec.duration_s|duration }}</p>
 
-<audio class="edit-player" controls preload="metadata" src="/audio/{{ rec.id }}" {% if queue %}autoplay{% endif %}></audio>
+<audio class="edit-player" controls preload="metadata" src="/audio/{{ rec.id }}" {% if queue and not saved %}data-autoplay{% endif %}></audio>
 
-<form method="post" action="/r/{{ rec.id }}" class="edit-form">
+<form method="post" action="/r/{{ rec.id }}" class="edit-form" autocomplete="off">
   {% if queue %}<input type="hidden" name="queue" value="1">{% endif %}
   <label class="wide">Title <input name="title" value="{{ rec.title or '' }}" placeholder="untitled"></label>
   <label>Key <input name="key" list="key-options" value="{{ rec.key or '' }}" placeholder="e.g. Em" autocomplete="off"></label>
