@@ -35,7 +35,7 @@ riffdb is a database and search tool, not a DAW: it never edits your audio.
 You need Docker with the Compose plugin.
 
 ```sh
-git clone https://github.com/<you>/riffdb.git
+git clone https://github.com/liberty5782/riffdb.git
 cd riffdb
 mkdir -p data                  # create it first so it's owned by you, not root
 docker compose up -d --build
@@ -157,3 +157,9 @@ Ideas, not promises:
 - Record straight from the browser
 - A JSON API for other apps (tab viewers, a mobile recorder, DAW scripts)
 - Optional audio analysis: estimated BPM/key and "sounds like this" search
+
+## License
+
+riffdb is free software, licensed under the [GNU General Public License v3.0 or later](LICENSE).
+You can use, modify and share it; if you distribute a modified version, it must stay under the GPL
+with its source available.

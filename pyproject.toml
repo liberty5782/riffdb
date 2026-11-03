@@ -3,6 +3,8 @@ name = "riffdb"
 version = "0.1.0"
 description = "Self-hosted searchable database of guitar riff recordings"
 requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
